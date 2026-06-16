@@ -15,6 +15,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && mkdir /app /config \
     && chown 1000:1000 /app
 
+COPY --chmod=0555 entrypoint.sh /entrypoint.sh
+
 USER 1000:1000
 
 RUN cd /app \
@@ -34,21 +36,21 @@ RUN cd /app \
         pubkey.pem \
         unrar-* \
         unrar7-* \
-    && mkdir scripts \
+    && mkdir -p dist/scripts \
     && extensions="$(curl -fsS https://raw.githubusercontent.com/nzbgetcom/nzbget-extensions/refs/heads/main/extensions.json)" \
     && for name in FakeDetector RemoveSamples; do \
          url="$(echo "${extensions}" | jq --arg name "${name}" -r '.[]|select(.name==$name)|.url')"; \
          curl -fLOsS "${url}"; \
-         unzip "$(basename "${url}")" -d scripts; \
+         unzip "$(basename "${url}")" -d dist/scripts; \
          rm "$(basename "${url}")"; \
        done \
     && curl -fLOsS \
-        --output-dir scripts \
+        --output-dir dist/scripts \
         --url https://raw.githubusercontent.com/l3uddz/nzbgetScripts/d9d852b4c889dd3636e6434d82445d5fedcbef0a/HashRenamer.py \
-    && chmod +x scripts/HashRenamer.py
+    && chmod +x dist/scripts/HashRenamer.py
 
 EXPOSE 6789
 VOLUME /downloads
 VOLUME /library
 
-ENTRYPOINT ["/app/nzbget", "--configfile=/app/nzbget.conf", "--option=OutputMode=log", "--option=WriteLog=none", "--server"]
+ENTRYPOINT ["/entrypoint.sh"]
