@@ -1,4 +1,4 @@
-FROM debian:13.7-slim
+FROM debian:13.8-slim
 
 ARG VERSION
 
